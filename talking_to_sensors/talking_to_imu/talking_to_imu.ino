@@ -2,7 +2,7 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
-  
+
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 void setup(void) 
@@ -25,7 +25,7 @@ void setup(void)
 
 void getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, String title){
   imu::Vector<3> data_vector = bno.getVector(sensor_type);
-  Serial.print(title + ": X: " + String(data_vector[0]) + " Y: " + String(data_vector[1]) + " Z: " + String(data_vector[2]));
+  Serial.print(title + "(X: " + String(data_vector[0]) + ", Y: " + String(data_vector[1]) + ", Z: " + String(data_vector[2]) + ") ");
 }
 
 void displayCalStatus(void)
@@ -57,12 +57,12 @@ void displayCalStatus(void)
 
 void loop(void) 
 {
-  getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "A");
-  getvec(Adafruit_BNO055::VECTOR_GYROSCOPE, "Gy");
-  getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "M");
-  getvec(Adafruit_BNO055::VECTOR_EULER, "E");
-  getvec(Adafruit_BNO055::VECTOR_LINEARACCEL, "L");
-  getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Gr");
+  getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "Acc");
+  getvec(Adafruit_BNO055::VECTOR_GYROSCOPE, "Gyr");
+  getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "Mag");
+  getvec(Adafruit_BNO055::VECTOR_EULER, "Eul");
+  getvec(Adafruit_BNO055::VECTOR_LINEARACCEL, "LnAc");
+  getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Grav");
   // get temperature and print to consol (accuracy of sensor is 1 degree)
   int temp = bno.getTemp();
   Serial.print("T: ");
