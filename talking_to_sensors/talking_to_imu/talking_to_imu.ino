@@ -1,6 +1,6 @@
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
-#include <Adafruit_BNO055.h>
+#include <Adafruit_BNO055.h>v
 #include <utility/imumaths.h>
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
@@ -25,7 +25,7 @@ void setup(void)
 
 void getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, String title){
   imu::Vector<3> data_vector = bno.getVector(sensor_type);
-  Serial.print(title + "(X: " + String(data_vector[0]) + ", Y: " + String(data_vector[1]) + ", Z: " + String(data_vector[2]) + ") ");
+  Serial.print(title + ": (" + String(data_vector[0]) + ", " + String(data_vector[1]) + ", " + String(data_vector[2]) + ") ");
 }
 
 void displayCalStatus(void)
@@ -33,15 +33,20 @@ void displayCalStatus(void)
   /* Get the four calibration values (0..3) */
   /* Any sensor data reporting 0 should be ignored, */
   /* 3 means 'fully calibrated" */
+  /* Note: 'system' calibration is for the overall calibration,
+     'gyro', 'accel', and 'mag' are for individual systems.
+  */
   uint8_t system, gyro, accel, mag;
   system = gyro = accel = mag = 0;
   bno.getCalibration(&system, &gyro, &accel, &mag);
+  
   /* The data should be ignored until the system calibration is > 0 */
-  Serial.print(",");
+  Serial.print(", ");
   if (!system)
   {
   Serial.print("! ");
   }
+  
   /* Display the individual values */
   Serial.print("Calibration: Sys:");
   Serial.print(system, DEC);
@@ -57,17 +62,25 @@ void displayCalStatus(void)
 
 void loop(void) 
 {
-  getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "Acc");
-  getvec(Adafruit_BNO055::VECTOR_GYROSCOPE, "Gyr");
-  getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "Mag");
-  getvec(Adafruit_BNO055::VECTOR_EULER, "Eul");
-  getvec(Adafruit_BNO055::VECTOR_LINEARACCEL, "LnAc");
-  getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Grav");
+  getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "Acc");   // Gravity + linear acceleration (m/s2)
+  getvec(Adafruit_BNO055::VECTOR_GYROSCOPE, "Gyr");       // Angular velocity vector (rad/s)
+  getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "Mag");   // Magnetic field strength vector (uT)
+  getvec(Adafruit_BNO055::VECTOR_EULER, "Eul");           // Euler angle of absolute orientation (deg)
+  getvec(Adafruit_BNO055::VECTOR_LINEARACCEL, "LnAc");    // Linear acceleration (m/s2)
+  getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Grav");        // Gravity acceleration vector (m/s2)
+
+  // Get quaternion vector
+  imu::Quaternion quat = bno.getQuat();
+  Serial.println(quat)
+  Serial.print("Quat: (" + String(quat.w()) + ", " + String(quat.y()) + ", " + String(quat.x()) + ", " + String(quat.z()) + ") ");
+  
   // get temperature and print to consol (accuracy of sensor is 1 degree)
   int temp = bno.getTemp();
   Serial.print("T: ");
   Serial.print(String(temp));
   Serial.print(" C");
+  
+  // Display current calibration status
   displayCalStatus();
   
   delay(1500);
