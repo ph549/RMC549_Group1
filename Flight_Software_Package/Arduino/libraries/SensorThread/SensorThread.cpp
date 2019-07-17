@@ -445,3 +445,22 @@ void GeigerSensorThread::ISR4() {
         m_timearrayctr[0]--;
     }
 }
+
+void AmbientTempSensorThread::readFromSensor(){
+    sensorData = "";
+
+  // Check and print any faults
+  uint8_t fault = max.readFault();
+  // it prints out the faults in decimals - see Adafruit_MAX31865.h to see what the faults are in Hex
+  if (fault) {
+    sensordata.concat("Fault ");
+    sensordata.concat(String(fault));
+    max.clearFault();
+
+  }
+  else{
+      sensordata.concat(max.temperature(RNOMINAL, RREF));
+  };
+  Serial.println();
+  delay(1000);
+}

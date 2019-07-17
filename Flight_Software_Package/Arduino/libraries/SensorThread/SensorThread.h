@@ -187,5 +187,13 @@ class GeigerSensorThread : public SensorThread {
 
 };
 
+class AmbientTempSensorThread : public SensorThread{
+    private:
+        void readFromSensor() override;
+
+    public:
+        AmbientTempSensorThread();
+};
+
 #endif
 
