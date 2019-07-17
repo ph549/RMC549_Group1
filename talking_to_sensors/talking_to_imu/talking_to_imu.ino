@@ -48,7 +48,7 @@ void displayCalStatus(void)
   }
   
   /* Display the individual values */
-  Serial.print("Calibration: Sys:");
+  Serial.print("Calib: Sys:");
   Serial.print(system, DEC);
   Serial.print(" G:");
   Serial.print(gyro, DEC);
@@ -71,7 +71,7 @@ void loop(void)
 
   // Get quaternion vector
   imu::Quaternion quat = bno.getQuat();
-  Serial.println(quat)
+  //Serial.println(String(quat))
   Serial.print("Quat: (" + String(quat.w()) + ", " + String(quat.y()) + ", " + String(quat.x()) + ", " + String(quat.z()) + ") ");
   
   // get temperature and print to consol (accuracy of sensor is 1 degree)
@@ -83,5 +83,6 @@ void loop(void)
   // Display current calibration status
   displayCalStatus();
   
-  delay(1500);
+  //delay(1500);
+  delay(500);
 }
