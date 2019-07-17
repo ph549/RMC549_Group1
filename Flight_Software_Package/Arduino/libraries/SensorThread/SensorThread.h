@@ -36,6 +36,7 @@
 #include <Adafruit_Sensor.h>    // General sensor library
 #include <Sydafruit_TSL2561_U.h> // Light sensor library
 #include <Wire.h>
+#include <Adafruit_MAX31865.h>
 
 class SensorThread : public Thread {
     protected:
@@ -189,7 +190,15 @@ class GeigerSensorThread : public SensorThread {
 
 class AmbientTempSensorThread : public SensorThread{
     private:
+        //Adafruit_MAX31865* max31865;
+        Adafruit_MAX31865 max31865 = Adafruit_MAX31865(15, 16, 17, 18);
         void readFromSensor() override;
+        // The value of the Rref resistor. Use 430.0 for PT100 and 4300.0 for PT1000
+        float RREF  =  430.0;
+        // The 'nominal' 0-degrees-C resistance of the sensor
+        // 100.0 for PT100, 1000.0 for PT1000
+        float RNOMINAL  =  100.0;
+
 
     public:
         AmbientTempSensorThread();

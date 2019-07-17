@@ -11,6 +11,7 @@
 #include <SD.h>
 #include <Adafruit_Sensor.h>
 #include <Sydafruit_TSL2561_U.h>
+#include <Adafruit_MAX31865.h>
 
 // Generic function for sampling from a sensor
 void SensorThread::run() {
@@ -446,21 +447,26 @@ void GeigerSensorThread::ISR4() {
     }
 }
 
+AmbientTempSensorThread::AmbientTempSensorThread(){
+    Serial.begin(9600);
+    Adafruit_MAX31865 max31865 = Adafruit_MAX31865(15, 16, 17, 18);
+    max31865.begin(MAX31865_3WIRE);  // set to 2WIRE or 4WIRE as necessary
+}
+
 void AmbientTempSensorThread::readFromSensor(){
     sensorData = "";
 
   // Check and print any faults
-  uint8_t fault = max.readFault();
+  uint8_t fault = max31865.readFault();
   // it prints out the faults in decimals - see Adafruit_MAX31865.h to see what the faults are in Hex
   if (fault) {
-    sensordata.concat("Fault ");
-    sensordata.concat(String(fault));
-    max.clearFault();
+    sensorData.concat("Fault ");
+    sensorData.concat(String(fault));
+    max31865.clearFault();
 
   }
   else{
-      sensordata.concat(max.temperature(RNOMINAL, RREF));
+      sensorData.concat(max31865.temperature(RNOMINAL, RREF));
   };
-  Serial.println();
-  delay(1000);
+//  delay(1000);
 }
