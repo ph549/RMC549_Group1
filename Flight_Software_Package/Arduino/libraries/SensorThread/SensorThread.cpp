@@ -128,17 +128,30 @@ void GPSSensorThread::readFromSensor() {
 void IMUSensorThread::readFromSensor() {
     sensorData = "";
 
-    if (Wire.requestFrom(0x28, 1, true) && IMUactive)
+    // Check if the values from the IMU are all zero, in which case reset it, in the case of power loss
+    // The if statement following the one below should check for this, but sometimes it misses it
+    String temp_accel = "";
+    String temp_mag = "";
+    String empty_string = "0.00,0.00,0.00";
+    temp_accel = getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "A");
+    temp_mag = getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "M");
+    if ((temp_accel == empty_string) && (temp_mag == empty_string)){
+        IMUactive = false;
+    }
+
+    if (Wire.requestFrom(0x28, 1, true) && IMUactive){
         IMUactive = true;
+    }
     else if (Wire.requestFrom(0x28, 1, true) && !IMUactive){
         // Detected IMU after a disconnection or power failure
         // Reinitialise IMU here
         *bnoPtr = Adafruit_BNO055(55);
         IMUactive = bnoPtr->begin();
     }
-    else if (!Wire.requestFrom(0x28, 1, true))
+    else if (!Wire.requestFrom(0x28, 1, true)){
         // Detected that IMU is not connected
         IMUactive = false;
+    }
 
     // Put IMU data acquisition code here and save result in sensorData
     if (IMUactive){
@@ -284,6 +297,9 @@ void LightSensorThread::readFromSensor() {
             }
             if ((BBLight3 == 65535) && (IRLight3 == 65535)){
                 light_sensor_3_error = true;
+            }
+            if ((BBLight1 == 0) && (IRLight1 == 0) && (BBLight2 == 0) && (IRLight2 == 0) && (BBLight3 == 0) && (IRLight3 == 0)){
+                activated = false; // The sensors have been reset, tell the begin code to run again next time the loop runs
             }
             if (light_sensor_1_error == false) {
                 sensorData.concat(String(BBLight1));
