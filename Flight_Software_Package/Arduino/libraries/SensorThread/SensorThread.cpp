@@ -447,7 +447,7 @@ void GeigerSensorThread::ISR4() {
     }
 }
 
-AmbientTempSensorThread::AmbientTempSensorThread(){
+AmbientTempSensorThread::AmbientTempSensorThread():SensorThread::SensorThread("TEMP_AMBIENT", "temp"){
     Serial.begin(9600);
     Adafruit_MAX31865 max31865 = Adafruit_MAX31865(15, 16, 17, 18);
     max31865.begin(MAX31865_3WIRE);  // set to 2WIRE or 4WIRE as necessary
