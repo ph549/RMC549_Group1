@@ -324,7 +324,7 @@ void LightSensorThread::readFromSensor() {
                 sensorData.concat(String(BBLight3));
                 sensorData.concat(",");
                 sensorData.concat(String(IRLight3));
-                sensorData.concat(",");
+                //sensorData.concat(",");
             }
             else {
                 sensorData.concat("LIGHT_SENSOR_3_ERROR,LIGHT_SENSOR_3_ERROR,");
