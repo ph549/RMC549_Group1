@@ -46,7 +46,7 @@ class SystemControl(FlightSoftwareParent):
         self.cutoff_conditions['time'][0] = datetime.datetime.strptime(temp_time, "%Y%m%d_%H:%M")
         try:
             # Configure the cutoff pin
-            if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
+            if self.system_name == 'MajorTom' or self.system_name == 'Rocky'  or self.system_name == 'ColonelTom' or self.system_name == 'Creed':
                 GPIO.setwarnings(False)
                 GPIO.setmode(GPIO.BCM)
                 GPIO.setup(self.cutoff_pin_bcm, GPIO.OUT, initial=GPIO.LOW)
@@ -160,7 +160,7 @@ class SystemControl(FlightSoftwareParent):
         """
         self.start_function_diagnostics("check_auto_cutoff_conditions")
         should_cut = False # declare false, will only be set to true if conditions is met.
-        if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
+        if self.system_name == 'MajorTom' or self.system_name == 'Rocky'  or self.system_name == 'ColonelTom' or self.system_name == 'Creed':
             # Check Pi timestamp against cutoff timestamp.
             try:
                 if (self.cutoff_conditions['time'][0] - datetime.datetime.utcnow()).total_seconds() <= 0:
@@ -281,7 +281,7 @@ class SystemControl(FlightSoftwareParent):
                     for command in commands_to_remove_and_use:
                         if command.lower() == 'cut the mofo':
                             try:
-                                if (self.system_name == 'MajorTom' or self.system_name == 'Rocky') \
+                                if (self.system_name == 'MajorTom' or self.system_name == 'Rocky'  or self.system_name == 'ColonelTom' or self.system_name == 'Creed') \
                                         and not self.has_already_cut_payload:
                                     # Ground said cut the payload so do it.
                                     self.log_info("Cutting payload form uplink command.")
@@ -306,7 +306,7 @@ class SystemControl(FlightSoftwareParent):
                 # Check for other automatic cutoff conditions based off of data line.
                 if self.check_auto_cutoff_conditions():
                     try:
-                        if (self.system_name == 'MajorTom' or self.system_name == 'Rocky') \
+                        if (self.system_name == 'MajorTom' or self.system_name == 'Rocky'  or self.system_name == 'ColonelTom' or self.system_name == 'Creed') \
                                 and not self.has_already_cut_payload:
                             self.log_info("Cutting payload form auto trigger.")
                             GPIO.output(self.cutoff_pin_bcm, GPIO.HIGH)

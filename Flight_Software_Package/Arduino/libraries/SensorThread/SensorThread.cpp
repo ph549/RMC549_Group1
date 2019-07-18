@@ -44,7 +44,7 @@ void GPSSensorThread::readFromSensor() {
 //        while(Serial1.available())
 //          Serial1.read();
 
-        float startingTime = millis();
+        unsigned long startingTime = millis();
 
         while(true && millis() < startingTime + timeCheck)
         {
@@ -399,29 +399,30 @@ void GeigerSensorThread::readFromSensor() {
     m_eventCount[1] = 0; // Geiger counter 2
     m_eventCount[2] = 0; // Noise counts from both counters combined
 
-    Serial.begin(9600);
-    if (!SD.begin(4)) {
-    // Serial.println("Card failed, or not present");
-    // don't do anything more:
-    // while (1);
-  }
+  //   Serial.begin(9600);
+  //   if (!SD.begin(chipSelect)) {
+  //   // Serial.println("Card failed, or not present");
+  //   // don't do anything more:
+  //       sensorData.concat("SD_ERROR");
+  //   // while (1);
+  // }
 
-    File dataFile = SD.open("datalog.txt", FILE_WRITE);
+  //   File dataFile = SD.open("datalog.txt", FILE_WRITE);
 
-  // if the file is available, write to it:
-  if (dataFile) {
-    for (int j = 0; j < 99; j++) {
-        dataFile.print(m_eventTime[j]);
-        dataFile.print(" ");
-        m_eventTime[j] = 0;
+  // // if the file is available, write to it:
+  // if (dataFile) {
+  //   for (int j = 0; j < 99; j++) {
+  //       dataFile.print(m_eventTime[j]);
+  //       dataFile.print(" ");
+  //       m_eventTime[j] = 0;
         
-    }
-    dataFile.print('\n');
+  //   }
+  //   dataFile.print('\n');
     
-    dataFile.close();
-    // print to the serial port too:
-    // Serial.println(dataString);
-  }
+  //   dataFile.close();
+  //   // print to the serial port too:
+  //   // Serial.println(dataString);
+  // }
 
   m_timearrayctr[0] = 0;
 

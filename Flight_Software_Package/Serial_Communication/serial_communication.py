@@ -57,7 +57,7 @@ class SerialCommunication(FlightSoftwareParent):
 
         try:
             # Configure the cutoff pin
-            if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
+            if self.system_name == 'MajorTom' or self.system_name == 'Rocky' or self.system_name == 'ColonelTom' or self.system_name == 'Creed':
                 GPIO.setwarnings(False)
                 GPIO.setmode(GPIO.BCM)
                 GPIO.setup(self.arduino_reset_pin, GPIO.OUT, initial=GPIO.LOW)
@@ -131,7 +131,7 @@ class SerialCommunication(FlightSoftwareParent):
                 pass
 
         # Open ports.
-        if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
+        if self.system_name == 'MajorTom' or self.system_name == 'Rocky' or self.system_name == 'ColonelTom' or self.system_name == 'Creed':
             try:
                 result.remove('/dev/ttyAMA0')  # AMA0 seems to be always "active" as is the Pi's PL011, remove it.
             except:
@@ -306,7 +306,7 @@ class SerialCommunication(FlightSoftwareParent):
         self.start_function_diagnostics("reset_serial_connection")
         # Something is wrong. Wait for some data transition to get stable.
         time.sleep(self.reconnection_wait)
-        if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
+        if self.system_name == 'MajorTom' or self.system_name == 'Rocky' or self.system_name == 'ColonelTom' or self.system_name == 'Creed':
             # Do power cycle pin for arduino.
             GPIO.output(self.arduino_reset_pin, GPIO.LOW)
             time.sleep(self.reconnection_wait/2)
