@@ -2,7 +2,7 @@
 import time
 
 # get the data to use: data file from last year's flight
-file_name = r'C:/Users/kimdu/Documents/ph549/20180709_data.txt'
+file_name = r'C:/Users/kimdu/Documents/ph549/20190718_data_test.txt'
 data = open(file_name, 'rb').readlines()
 for i in range(len(data)):
     data[i] = data[i].decode()[:-2]

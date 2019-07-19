@@ -1,0 +1,14 @@
+
+
+xtick.labelsize : 15
+ytick.labelsize : 15
+axes.labelsize : 25
+axes.titlesize : 25
+
+legend.fontsize : 20
+
+legend.frameon : False
+
+figure.titlesize: 30
+
+grid.linewidth : 0.3
