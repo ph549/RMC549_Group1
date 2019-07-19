@@ -211,9 +211,9 @@ def read_last_line_in_data_log():
     """
     timestamp = datetime.datetime.utcnow().strftime("%Y%m%d")
     log_file_path = r'C:/Users/kimdu/Documents/ph549/Telemetry_logs'
-    # log_file_path += os.sep + timestamp
-    # file_name = log_file_path + os.sep + timestamp + "_data.txt"
-    file_name = r'C:/Users/kimdu/Documents/ph549/Telemetry_logs/test.txt' # test generated data
+    log_file_path += os.sep + timestamp
+    file_name = log_file_path + os.sep + timestamp + "_data.txt"
+    # file_name = r'C:/Users/kimdu/Documents/ph549/Telemetry_logs/test.txt' # test generated data
     try:
         with open(file_name, 'rb') as f:
             f.seek(-2, os.SEEK_END)
