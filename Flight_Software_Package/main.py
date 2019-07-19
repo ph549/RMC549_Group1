@@ -47,7 +47,7 @@ if __name__ == "__main__":
     Command_And_Control_Thread.join()
     System_Control_Thread.should_thread_run       = False
     System_Control_Thread.join()
-    if socket.gethostname() == "Rocky" or socket.gethostname() == "MajorTom":
+    if socket.gethostname() == "Rocky" or socket.gethostname() == "MajorTom" or socket.gethostname() == "ColonelTom" or socket.gethostname() == "Creed":
         GPIO.cleanup()
     Telemetry_Thread.should_thread_run = False
     Telemetry_Thread.join()

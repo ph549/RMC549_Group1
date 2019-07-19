@@ -9,7 +9,7 @@ import threading
 import time
 import datetime
 from sys import platform
-if socket.gethostname() == "Rocky" or socket.gethostname() == "MajorTom":
+if socket.gethostname() == "Rocky" or socket.gethostname() == "MajorTom" or socket.gethostname() == "Creed" or socket.gethostname() == "ColonelTom":
     import RPi.GPIO as GPIO
     import smbus
 from Logger.logger import *
