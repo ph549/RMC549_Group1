@@ -308,7 +308,7 @@ class SystemControl(FlightSoftwareParent):
                     try:
                         if (self.system_name == 'MajorTom' or self.system_name == 'Rocky'  or self.system_name == 'ColonelTom' or self.system_name == 'Creed') \
                                 and not self.has_already_cut_payload:
-                            self.log_info("Cutting payload form auto trigger.")
+                            self.log_info("Cutting payload from auto trigger.")
                             GPIO.output(self.cutoff_pin_bcm, GPIO.HIGH)
                             time.sleep(self.cutoff_time_high)
                             GPIO.output(self.cutoff_pin_bcm, GPIO.LOW)

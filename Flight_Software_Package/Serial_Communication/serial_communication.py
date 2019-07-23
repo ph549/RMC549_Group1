@@ -220,11 +220,11 @@ class SerialCommunication(FlightSoftwareParent):
                 self.log_info("received [%s] information over [%s]" % (type, port))
 
         except Exception as err:
-            self.log_error(str(err))
+            self.log_error("readline_from_serial %s"%str(err))
             self.reset_serial_connection()
         self.end_function_diagnostics("readline_from_serial")
 
-    def write_to_serial(self, port: str, message: str) -> None:
+    def write_to_serial(self, port: str, message) -> None:
         """
         This function will write data to the port during serial communication.
 
@@ -235,15 +235,21 @@ class SerialCommunication(FlightSoftwareParent):
         :return: None
         """
         self.start_function_diagnostics("write_to_serial")
+        # self.log_info("sending [%s] over [%s] with type [%s]" % (message, port,type(message)))
+        if type(message) is str:
+            msg = message.encode('utf-8')
+        if type(message) is bytes:
+            msg = message
         try:
-            self.port_list[port].write(message.encode('utf-8'))
+            # self.log_info("msg form is [%s] and is of type %s" % (msg,type(msg)))
+            self.port_list[port].write(serial.to_bytes(msg))
             if message is not "RX":
                 message.strip()
                 message = message.replace("\n", "")
                 message = message.replace("\r", "")
-                self.log_info("sent [%s] over [%s]" % (message, port))
+                # self.log_info("sent [%s] over [%s]" % (message, port))
         except Exception as err:
-            self.log_error(str(err))
+            self.log_error("write_to_serial %s with message %s and the message is a %s" % (str(err),str(msg),type(msg)))
             self.reset_serial_connection()
         self.end_function_diagnostics("write_to_serial")
 
@@ -324,16 +330,32 @@ class SerialCommunication(FlightSoftwareParent):
     def run(self):
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
         while self.should_thread_run:
+            msg="No assigned"
+            if len(self.write_request_buffer) > 0:
+                wmsg=self.write_request_buffer
+                # self.log_info("Messages in buffer: %s" % str(wmsg))
+                # self.log_info("To send: %s at type %s" % (str(wmsg[0]),type(wmsg[0][1])))
+                if not self.expect_read_after_write:
+                    msg=wmsg
+            elif len(self.read_request_buffer) > 0:
+                rmsg=self.read_request_buffer
+                # self.log_info("Reading: %s" % str(rmsg))
+                if self.expect_read_after_write:
+                    msg=rmsg
             try:
                 if len(self.read_request_buffer) > 0 and self.expect_read_after_write:
                     self.readline_from_serial(self.read_request_buffer[0][0], self.read_request_buffer[0][1])
                     del self.read_request_buffer[0]
                     self.expect_read_after_write = False
-                elif len(self.write_request_buffer) > 0 and not self.expect_read_after_write:
+                elif len(self.write_request_buffer) > 0 and not self.expect_read_after_write:                    
+#                    self.log_info("sending [%s] " % self.write_request_buffer[0][1])
+#                    self.log_info("over [%s] " % self.write_request_buffer[0][0])
+#                    self.log_info("with type [%s]" % type(self.write_request_buffer[0][1]))
                     self.write_to_serial(self.write_request_buffer[0][0], self.write_request_buffer[0][1])
                     del self.write_request_buffer[0]
                     self.expect_read_after_write = True
             except Exception as err:
-                self.log_error("Main function error [%s]" % str(err))
+                self.log_error("Main function error [%s] on message %s" % (str(err),str(msg)))
+
             time.sleep(self.main_delay)
         print("%s << %s << Exiting Thread" % (self.system_name, self.class_name))
