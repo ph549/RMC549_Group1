@@ -2,8 +2,9 @@ import socket
 import time
 import datetime
 
-Look_At_Rocky    = True
+Look_At_Rocky    = False
 Look_At_MajorTom = False
+Look_At_Creed = True
 
 UDP_IP   = "0.0.0.0"
 UDP_PORT = 55555
@@ -19,5 +20,7 @@ while True:
     if line.split(" << ")[1] == "MajorTom" and Look_At_MajorTom:
         print(line)
     if line.split(" << ")[1] == "Rocky" and Look_At_Rocky:
+        print(line)
+    if line.split(" << ")[1] == "Creed" and Look_At_Creed:
         print(line)
     time.sleep(0.1)
