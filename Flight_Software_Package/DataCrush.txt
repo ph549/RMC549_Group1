@@ -1,0 +1,50 @@
+#name,mult,digt,bits,clipped,#comment
+[("PiTS",0,0,32),#
+("ATSms",1,9,32),#
+("UTC",1,6,24),#
+("LtDgMn",100000,7,24,5200),#
+("NS",1,0,0),#
+("LnDgMn",100000,7,24,10600),#
+("EW",1,0,0),#
+("Nsat",1,2,8),#
+("Alt",1,5,16),#
+("Altu",1,0,0),#
+("Acxms2",-100,0,16),#
+("Acyms2",-100,0,16),#
+("Aczms2",-100,0,16),#
+("Gyxrs",-16,0,16),#
+("Gyyrs",-16,0,16),#
+("Gyzrs",-16,0,16),#
+("MgxuT",-16,0,16),#
+("MgyuT",-16,0,16),#
+("MgzuT",-16,0,16),#
+("Elxdg",-16,0,16),#
+("Elydg",-16,0,16),#
+("Elzdg",-16,0,16),#
+("LAcxms2",-100,0,16),#
+("LAcyms2",-100,0,16),#
+("LAczms2",-100,0,16),#
+("Gvxms2",-100,0,16),#
+("Gvyms2",-100,0,16),#
+("Gvzms2",-100,0,16),#
+("TC",1,0,8),#
+("SyCl03",1,0,2),#
+("GyCl03",1,0,2),#
+("AcCl03",1,0,2),#
+("MgCl03",1,0,2),#
+("C1",1,0,16),#
+("C2",1,0,16),#
+("GN",1,0,16),#
+("BBL1",1,0,16),#
+("IRL1",1,0,16),#
+("BBL2",1,0,16),#
+("IRL2",1,0,16),#
+("BBL3",1,0,16),#
+("IRL3",1,0,16),#
+("temp",-100,0,16)]#
+#multiply by |mult|, then keep digt smallest digits, then convert to binary as bits/8 bytes for downlink
+#where multiply is set to 0, something special happens
+#where mult is potive, number is unsigned
+#where mult is negative, number is signed
+#where digits is set to 0, we will use all
+#where bits is set to 0, the field is not downlinked

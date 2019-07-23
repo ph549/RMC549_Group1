@@ -6,7 +6,14 @@ This file is used to communicate with the Arduino (recieving downlink data and s
 
 ## live_plotting.py
 
-This file is used to collected and parse the data from the log .txt files and plot them in real time during the flight for the ground station operators. See documentation within the file for how to operate.
+This file is used to collected and parse the data from the log .txt files and plot them in real time during the flight for the ground station operators. 
+See documentation within the file for how to operate.
+
+## real_time_plotting_new.py
+
+2019: use this file for plotting the data during the flight.
+I apologize for the inconsistent naming.
+Several variables need to be manually set beforehand: see note to users 1 and the section below the import statements. 
 
 ## generate_dummy_logs.py
 

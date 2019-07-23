@@ -7,6 +7,11 @@
 
 #include "SensorThread.h"
 #include <Wire.h>
+#include <SPI.h>
+#include <SD.h>
+#include <Adafruit_Sensor.h>
+#include <Sydafruit_TSL2561_U.h>
+#include <Adafruit_MAX31865.h>
 
 // Generic function for sampling from a sensor
 void SensorThread::run() {
@@ -39,7 +44,7 @@ void GPSSensorThread::readFromSensor() {
 //        while(Serial1.available())
 //          Serial1.read();
 
-        float startingTime = millis();
+        unsigned long startingTime = millis();
 
         while(true && millis() < startingTime + timeCheck)
         {
@@ -124,17 +129,30 @@ void GPSSensorThread::readFromSensor() {
 void IMUSensorThread::readFromSensor() {
     sensorData = "";
 
-    if (Wire.requestFrom(0x28, 1, true) && IMUactive)
+    // Check if the values from the IMU are all zero, in which case reset it, in the case of power loss
+    // The if statement following the one below should check for this, but sometimes it misses it
+    String temp_accel = "";
+    String temp_mag = "";
+    String empty_string = "0.00,0.00,0.00";
+    temp_accel = getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "A");
+    temp_mag = getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "M");
+    if ((temp_accel == empty_string) && (temp_mag == empty_string)){
+        IMUactive = false;
+    }
+
+    if (Wire.requestFrom(0x28, 1, true) && IMUactive){
         IMUactive = true;
+    }
     else if (Wire.requestFrom(0x28, 1, true) && !IMUactive){
         // Detected IMU after a disconnection or power failure
         // Reinitialise IMU here
         *bnoPtr = Adafruit_BNO055(55);
         IMUactive = bnoPtr->begin();
     }
-    else if (!Wire.requestFrom(0x28, 1, true))
+    else if (!Wire.requestFrom(0x28, 1, true)){
         // Detected that IMU is not connected
         IMUactive = false;
+    }
 
     // Put IMU data acquisition code here and save result in sensorData
     if (IMUactive){
@@ -190,25 +208,179 @@ String IMUSensorThread::displayCalStatus(void) {
     return calString;
 }
 
+int LightSensorThread::Start3Light() {
+  // Tell the sensors to begin sensing
+  now = millis();
+  lux1.startCount(now);
+  lux2.startCount(now);
+  lux3.startCount(now);
+}
+
+void LightSensorThread::readFromSensor() {
+
+    sensorData = ""; // Needed to clear data from last measurement
+
+    tsl2561IntegrationTime_t timeSetting = TSL2561_INTEGRATIONTIME_13MS; //actually a bitwise command
+
+    // variables that check connection errors
+    int i = 0;
+    int j = 0;
+    int k = 0;
+    bool light_sensor_1_error = false;
+    bool light_sensor_2_error = false;
+    bool light_sensor_3_error = false;
+
+    // Don't need to run through this every time, just the first time
+    // Ideally it would be in the creator class but it will freeze the code if placed there
+    //(as it will not be able to find the sensors)
+    if (activated == false) { 
+     while(true){
+        if (!lux1.begin()) {  // Try to initialise the sensor
+            i++; // if it fails, add a count
+            if (i>5){ // if it fails more than five times, there is a connection error. Log it and break.
+                light_sensor_1_error = true;
+                break;
+            }
+            continue; // Not ready yet, try again
+      } else {
+            lux1.setGainTime(TSL2561_GAIN_1X, timeSetting); 
+            break; // Initialization complete, break out to start next
+      }
+     }
+
+    while(true){
+        if (!lux2.begin()) {  // Try to initialise the sensor
+            j++;
+            if (j>5){
+                light_sensor_2_error = true;
+                break;
+            }
+            continue; // Not ready yet, try again
+      } else {
+            lux2.setGainTime(TSL2561_GAIN_1X, timeSetting); 
+            break; // Initializion complete, break out to start next
+      }
+  }
+
+    while(true){
+        if (!lux3.begin()) {  // Try to initialise the sensor
+            k++;
+            if (k>5){
+                light_sensor_3_error = true;
+                break;
+            }
+            continue; // Not ready yet, try again
+      } else {
+            lux3.setGainTime(TSL2561_GAIN_1X, timeSetting); 
+            break; // Initialization complete, ready to continue!
+      }
+  }
+
+  activated = true; // This has run once, tell it not to run again
+}
+    Start3Light(); // Start sensors for integration
+    while(true){
+        now = millis();
+        if (now - lux1._tsl2561Counting < lightIntegrate) {
+            continue; // Wait until the integration time has passed
+        } 
+        else { // Integration time has passed, grab data and send
+            noInterrupts(); //I don't know what happens if you interrupt a bitwise command to the cricuitry, let's not find out
+            lux1.readADC(&BBLight1, &IRLight1);
+            lux2.readADC(&BBLight2, &IRLight2);
+            lux3.readADC(&BBLight3, &IRLight3);
+            interrupts();
+            if ((BBLight1 == 65535) && (IRLight1 == 65535)){
+                light_sensor_1_error = true;
+            }
+            if ((BBLight2 == 65535) && (IRLight2 == 65535)){
+                light_sensor_2_error = true;
+            }
+            if ((BBLight3 == 65535) && (IRLight3 == 65535)){
+                light_sensor_3_error = true;
+            }
+            if (((BBLight1 == 0) && (IRLight1 == 0)) || ((BBLight2 == 0) && (IRLight2 == 0)) || ((BBLight3 == 0) && (IRLight3 == 0))){
+                activated = false; // The sensors have been reset, tell the begin code to run again next time the loop runs
+            }
+            if (light_sensor_1_error == false) {
+                sensorData.concat(String(BBLight1));
+                sensorData.concat(",");
+                sensorData.concat(String(IRLight1));
+                sensorData.concat(",");
+            }
+            else {
+                sensorData.concat("LIGHT_SENSOR_1_ERROR,LIGHT_SENSOR_1_ERROR,");
+            }
+            if (light_sensor_2_error == false) {
+                sensorData.concat(String(BBLight2));
+                sensorData.concat(",");
+                sensorData.concat(String(IRLight2));
+                sensorData.concat(",");
+            }
+            else {
+                sensorData.concat("LIGHT_SENSOR_2_ERROR,LIGHT_SENSOR_2_ERROR,");
+            }
+            if (light_sensor_3_error == false) {
+                sensorData.concat(String(BBLight3));
+                sensorData.concat(",");
+                sensorData.concat(String(IRLight3));
+                //sensorData.concat(",");
+            }
+            else {
+                sensorData.concat("LIGHT_SENSOR_3_ERROR,LIGHT_SENSOR_3_ERROR,");
+            }
+            break;
+        }
+    }
+}
+
+LightSensorThread::LightSensorThread():SensorThread::SensorThread("LIGHT", "BBL1,IRL1,BBL2,IRL2,BBL3,IRL3") {
+
+    // Prepare to connect to light sensors
+    //pinMode(13, OUTPUT);
+    Serial.begin(9600);
+
+    // These must be instantiated both here and in the header file, or the compiler cannot find the correct library function
+    // Don't ask me why
+     Adafruit_TSL2561_Unified lux1 = Adafruit_TSL2561_Unified(TSL2561_ADDR_LOW, 12345);
+     Adafruit_TSL2561_Unified lux2 = Adafruit_TSL2561_Unified(TSL2561_ADDR_HIGH, 12346);
+     Adafruit_TSL2561_Unified lux3 = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12347);
+
+     // If necessary, change the integration time here
+     lightIntegrate = TSL2561_DELAY_INTTIME_13MS;
+     
+}
+
+
 // define static member variables for Geiger class
-volatile int GeigerSensorThread::m_interruptPin[] = {0, 0};
+volatile int GeigerSensorThread::m_interruptPin[] = {0, 0, 0, 0};
 volatile uint16_t GeigerSensorThread::m_eventCount[] = {0, 0, 0};
-volatile unsigned long GeigerSensorThread::m_eventTime[] = {0, 0};
+volatile unsigned int GeigerSensorThread::m_eventTime[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0 ,0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0 ,0 ,0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0 ,0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0 ,0 ,0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0,  };
+volatile int GeigerSensorThread::m_timearrayctr[] = {0};
 
 // initialize geiger counter thread with the values of the interrupt pins each sensor is connected to
-GeigerSensorThread::GeigerSensorThread(int interruptPin1, int interruptPin2) : SensorThread::SensorThread("GEIGER", "C1,C2,SC") {
+GeigerSensorThread::GeigerSensorThread(int interruptPin1, int interruptPin2, int interruptPin3, int interruptPin4) : SensorThread::SensorThread("GEIGER", "C1,C2,GN") {
     m_interruptPin[0] = interruptPin1;
     m_interruptPin[1] = interruptPin2;
+    m_interruptPin[2] = interruptPin3;
+    m_interruptPin[3] = interruptPin4;
     m_eventCount[0] = 0;
     m_eventCount[1] = 0;
     m_eventCount[2] = 0;
-    m_eventTime[0] = 0;
-    m_eventTime[1] = 0;
+    for (int i = 0; i < 101; i++) {
+        m_eventTime[i] = 0;
+        
+    }
+    m_timearrayctr[0] = 0;
 
-    pinMode(m_interruptPin[0], INPUT);
-    pinMode(m_interruptPin[1], INPUT);
+    pinMode(m_interruptPin[0], INPUT_PULLUP);
+    pinMode(m_interruptPin[1], INPUT_PULLUP);
+    pinMode(m_interruptPin[2], INPUT_PULLUP);
+    pinMode(m_interruptPin[3], INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(m_interruptPin[0]), &GeigerSensorThread::ISR1, FALLING);
     attachInterrupt(digitalPinToInterrupt(m_interruptPin[1]), &GeigerSensorThread::ISR2, FALLING);
+    attachInterrupt(digitalPinToInterrupt(m_interruptPin[2]), &GeigerSensorThread::ISR3, FALLING);
+    attachInterrupt(digitalPinToInterrupt(m_interruptPin[3]), &GeigerSensorThread::ISR4, FALLING);
 }
 
 void GeigerSensorThread::readFromSensor() {
@@ -223,39 +395,95 @@ void GeigerSensorThread::readFromSensor() {
     sensorData.concat(String(m_eventCount[2]));
 
     // Reset counts
-    m_eventCount[0] = 0;
-    m_eventCount[1] = 0;
-    m_eventCount[2] = 0;
+    m_eventCount[0] = 0; // Geiger counter 1
+    m_eventCount[1] = 0; // Geiger counter 2
+    m_eventCount[2] = 0; // Noise counts from both counters combined
+
+  //   Serial.begin(9600);
+  //   if (!SD.begin(chipSelect)) {
+  //   // Serial.println("Card failed, or not present");
+  //   // don't do anything more:
+  //       sensorData.concat("SD_ERROR");
+  //   // while (1);
+  // }
+
+  //   File dataFile = SD.open("datalog.txt", FILE_WRITE);
+
+  // // if the file is available, write to it:
+  // if (dataFile) {
+  //   for (int j = 0; j < 99; j++) {
+  //       dataFile.print(m_eventTime[j]);
+  //       dataFile.print(" ");
+  //       m_eventTime[j] = 0;
+        
+  //   }
+  //   dataFile.print('\n');
+    
+  //   dataFile.close();
+  //   // print to the serial port too:
+  //   // Serial.println(dataString);
+  // }
+
+  m_timearrayctr[0] = 0;
+
 }
 
-// Interrupt Service Routine for a count event
+// Interrupt Service Routine for a count event for Geiger Counter 1
 void GeigerSensorThread::ISR1() {
-    m_eventTime[0] = micros();
-    if (m_eventTime[0] - m_eventTime[1] < 50)
-    {
-        // Simultaneous count occurred because the other geiger counter
-        // detected a count within the last 50 microseconds
-        m_eventCount[2]++;
-        m_eventCount[1]--;
+    m_eventTime[m_timearrayctr[0]] = millis();
+    m_eventCount[0]++; // add a count
+    if (m_timearrayctr[0] < 99){ // So as not to crash the program if there is a sudden burst of radiation and the array overflows
+            m_timearrayctr[0]++;
+        }
     }
-    else
-    {
-        // Single count detected
-        m_eventCount[0]++;
+
+// Interrupt Service Routine for a noise event for Geiger Counter 1
+void GeigerSensorThread::ISR2() {
+    m_eventCount[0]--; // Remove a count as this count was likely noise
+    m_eventCount[2]++;
+    if (m_timearrayctr[0] > 1){ // So as not to crash the program if a ton of noise happens and it tries to go below 0
+        m_timearrayctr[0]--;
     }
 }
 
-void GeigerSensorThread::ISR2() {
-    m_eventTime[1] = micros();
-    if (m_eventTime[1] - m_eventTime[0] < 50)
-    {
-        // Simultaneous count detected
-        m_eventCount[2]++;
-        m_eventCount[0]--;
+// Interrupt Service Routine for a count event for Geiger Counter 2
+void GeigerSensorThread::ISR3() {
+    m_eventTime[m_timearrayctr[0]] = millis();
+    m_eventCount[1]++;
+    if (m_timearrayctr[0] < 99){
+        m_timearrayctr[0]++;
+        }
     }
-    else
-    {
-        // Single count detected
-        m_eventCount[1]++;
+
+// Interrupt Service Routine for a noise event for Geiger Counter 2
+void GeigerSensorThread::ISR4() {
+    m_eventCount[1]--;
+    m_eventCount[2]++;
+    if (m_timearrayctr[0] > 1){
+        m_timearrayctr[0]--;
     }
+}
+
+AmbientTempSensorThread::AmbientTempSensorThread():SensorThread::SensorThread("TEMP_AMBIENT", "temp"){
+    Serial.begin(9600);
+    Adafruit_MAX31865 max31865 = Adafruit_MAX31865(15, 16, 17, 18);
+    max31865.begin(MAX31865_3WIRE);  // set to 2WIRE or 4WIRE as necessary
+}
+
+void AmbientTempSensorThread::readFromSensor(){
+    sensorData = "";
+
+  // Check and print any faults
+  uint8_t fault = max31865.readFault();
+  // it prints out the faults in decimals - see Adafruit_MAX31865.h to see what the faults are in Hex
+  if (fault) {
+    sensorData.concat("Fault ");
+    sensorData.concat(String(fault));
+    max31865.clearFault();
+
+  }
+  else{
+      sensorData.concat(max31865.temperature(RNOMINAL, RREF));
+  };
+//  delay(1000);
 }

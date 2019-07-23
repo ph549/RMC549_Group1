@@ -1,5 +1,6 @@
 from Common.FSW_Common import *
 from Serial_Communication.serial_communication import SerialCommunication
+from SydCompress import *
 
 class Telemetry(FlightSoftwareParent):
     """
@@ -23,6 +24,7 @@ class Telemetry(FlightSoftwareParent):
         self.enable_telemetry     = True               # Enable/disable for the telemetry.
         super().__init__("Telemetry", logging_object)  # Run init of parent object.
         self.serial_object         = serial_object     # Reference to serial object.
+        self.syd_compress         = SydCompress(hard=1)
 
     def load_yaml_settings(self)->None:
         """
@@ -73,8 +75,11 @@ class Telemetry(FlightSoftwareParent):
                                     tx_timer_start = datetime.datetime.now()
                                     log_line = self.read_last_line_in_data_log()
                                     time.sleep(self.buffering_delay)
-                                    self.serial_object.write_request_buffer.append([port, "TX%s" % log_line])
+                                    msg=self.syd_compress.Break(log_line.strip("\n"))
+                                    # self.log_info("sending %s with length of %i bytes"%(msg,len(msg)))
+                                    self.serial_object.write_request_buffer.append([port, b"TX"+msg])
                                     time.sleep(self.buffering_delay)
+                                    # self.log_info("sent succeeds")
                                     self.serial_object.read_request_buffer.append([port, "TX"])
                                     time.sleep(self.buffering_delay)
 
