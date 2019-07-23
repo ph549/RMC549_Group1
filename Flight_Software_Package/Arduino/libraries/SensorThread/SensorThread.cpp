@@ -299,7 +299,7 @@ void LightSensorThread::readFromSensor() {
             if ((BBLight3 == 65535) && (IRLight3 == 65535)){
                 light_sensor_3_error = true;
             }
-            if ((BBLight1 == 0) && (IRLight1 == 0) && (BBLight2 == 0) && (IRLight2 == 0) && (BBLight3 == 0) && (IRLight3 == 0)){
+            if (((BBLight1 == 0) && (IRLight1 == 0)) || ((BBLight2 == 0) && (IRLight2 == 0)) || ((BBLight3 == 0) && (IRLight3 == 0))){
                 activated = false; // The sensors have been reset, tell the begin code to run again next time the loop runs
             }
             if (light_sensor_1_error == false) {
